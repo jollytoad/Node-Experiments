@@ -10,23 +10,34 @@ app.get('/', function (req, res) {
 });
 
 var incoming = net.createServer();
+var backendSocket;
 
-incoming.on('connection', function(socketA) {
-    console.log('connection socketA');
-    socketA.setEncoding('ascii');
-    
-    io.sockets.on('connection', function (socketB) {
-        console.log('connection socketB');
-    
-        socketA.on('data', function(data) {
-            console.log('data on socketA:', data);
-            socketB.emit('msg', data);
-        });
+incoming.on('connection', function(socket) {
+    console.log('backend connection');
 
-        socketB.on('msg', function(data) {
-            console.log('msg on socketB:', data);
-            socketA.write(data);
-        });
+    socket.setEncoding('ascii');
+
+    socket.on('data', function(data) {
+        console.log('data on backend socket:', data);
+        io.sockets.in('everyone').emit('msg', data);
+    });
+
+    socket.on('end', function() {
+        console.log('backend closed');
+        backendSocket = null;
+    });
+
+    backendSocket = socket;
+});
+
+io.sockets.on('connection', function (socket) {
+    console.log('frontend connection');
+
+    socket.join('everyone');
+
+    socket.on('msg', function(data) {
+        console.log('msg on frontend socket:', data);
+        backendSocket && backendSocket.write(data);
     });
 
 });
