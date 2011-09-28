@@ -1,6 +1,9 @@
-var net = require("net");
-var app = require("express").createServer();
-var io = require("socket.io").listen(app);
+var net = require("net"),
+    express = require("express"),
+    app = express.createServer(),
+    io = require("socket.io").listen(app);
+
+app.use(express.static(__dirname + "/public"));
 
 app.listen(8081);
 
